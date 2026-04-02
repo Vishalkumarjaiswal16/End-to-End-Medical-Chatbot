@@ -12,6 +12,11 @@
 
 > An end-to-end **Medical Chatbot** built with Retrieval-Augmented Generation (RAG) principles to answer domain-specific medical queries from a curated knowledge base. The project combines document ingestion, embedding generation, vector search, and LLM-powered response generation inside a Flask web application.
 
+
+<p align="center">
+  <img src="images/Screenshot 2026-04-02 224100.png" alt="Medical Chatbot Demo" width="800"/>
+</p>
+
 ---
 
 ## 📋 Table of Contents
