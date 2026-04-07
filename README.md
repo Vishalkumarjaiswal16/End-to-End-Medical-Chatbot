@@ -295,7 +295,7 @@ http://localhost:5000
 
 
 ## 3. Create ECR repo to store/save docker image
-    - Save the URI: 315865595364.dkr.ecr.us-east-1.amazonaws.com/medi
+    - Save the URI: your ecr repository uri 
 
 
 ## 4. Create EC2 machine (Ubuntu)
