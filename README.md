@@ -33,6 +33,7 @@
   - [Configuration](#configuration)
   - [Running the App](#running-the-app)
 - [Key Features](#key-features)
+- [Deployment](#deployment)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -142,22 +143,22 @@ Medical Documents (PDFs)
 ```bash
 End-to-End-Medical-Chatbot/
 │
-├── .github/workflows/      # CI/CD workflow definitions
-├── data/                   # Source medical knowledge/data files (PDFs)
-├── research/               # Experiments and exploratory notebooks
-├── src/                    # Core application package
-│   ├── helper.py           # Data loading & chunking utilities
-│   └── prompt.py           # Prompt templates for LLM
-├── static/                 # Static frontend assets (CSS, JS)
-├── templates/              # HTML templates for Flask UI
-│   └── chat.html           # Main chat interface
-├── app.py                  # Flask application entry point
-├── store_index.py          # Script to create/store embeddings in Pinecone
-├── pyproject.toml          # Project configuration and dependencies
-├── setup.py                # Packaging/setup configuration
-├── template.sh             # Project scaffolding helper
-├── LICENSE                 # MIT License
-└── README.md               # Project documentation
+├── .github/workflows/       # CI/CD workflow definitions
+├── data/                    # Source medical knowledge/data files (PDFs)
+├── research/                # Experiments and exploratory notebooks
+├── src/                     # Core application package
+│   ├── helper.py            # Data loading & chunking utilities
+│   └── prompt.py            # Prompt templates for LLM
+├── static/                  # Static frontend assets (CSS, JS)
+├── templates/               # HTML templates for Flask UI
+│   └── chat.html            # Main chat interface
+├── app.py                   # Flask application entry point
+├── store_index.py           # Script to create/store embeddings in Pinecone
+├── pyproject.toml           # Project configuration and dependencies
+├── setup.py                 # Packaging/setup configuration
+├── template.sh              # Project scaffolding helper
+├── LICENSE                  # MIT License
+└── README.md                # Project documentation
 ```
 
 ---
@@ -184,16 +185,18 @@ cd End-to-End-Medical-Chatbot
 2. **Create and activate a virtual environment**
 
 Using Conda:
+
 ```bash
 conda create -n medibot python=3.10 -y
 conda activate medibot
 ```
 
 Or using `venv`:
+
 ```bash
 python -m venv venv
-source venv/bin/activate        # On Linux/Mac
-venv\Scripts\activate           # On Windows
+source venv/bin/activate    # On Linux/Mac
+venv\Scripts\activate       # On Windows
 ```
 
 3. **Install dependencies**
@@ -203,6 +206,7 @@ pip install -r requirements.txt
 ```
 
 Or using the modern project configuration:
+
 ```bash
 pip install -e .
 ```
@@ -251,7 +255,81 @@ http://localhost:5000
 - 🖥️ **Interactive UI** — Clean Flask-based chat interface with HTML/CSS templates
 - 🔄 **Modular Architecture** — Indexing pipeline separated from the serving pipeline
 - 🚀 **CI/CD Ready** — GitHub Actions workflow included for automation
-- ☁️ **Cloud Deployable** — AWS deployment direction included in the repository
+- ☁️ **Cloud Deployable** — Deployed on AWS using Docker + ECR + EC2 with GitHub Actions
+
+---
+
+## ☁️ Deployment
+
+# AWS-CICD-Deployment-with-Github-Actions
+
+## 1. Login to AWS console.
+
+## 2. Create IAM user for deployment
+
+    #with specific access
+
+    1. EC2 access : It is virtual machine
+
+    2. ECR: Elastic Container registry to save your docker image in aws
+
+
+    #Description: About the deployment
+
+    1. Build docker image of the source code
+
+    2. Push your docker image to ECR
+
+    3. Launch Your EC2
+
+    4. Pull Your image from ECR in EC2
+
+    5. Lauch your docker image in EC2
+
+
+    #Policy:
+
+    1. AmazonEC2ContainerRegistryFullAccess
+
+    2. AmazonEC2FullAccess
+
+
+## 3. Create ECR repo to store/save docker image
+    - Save the URI: 315865595366.dkr.ecr.us-east-1.amazonaws.com/medicalbot
+
+
+## 4. Create EC2 machine (Ubuntu)
+
+## 5. Open EC2 and Install docker in EC2 Machine:
+
+
+    #optinal
+
+    sudo apt-get update -y
+
+    sudo apt-get upgrade
+
+    #required
+
+    curl -fsSL https://get.docker.com -o get-docker.sh
+
+    sudo sh get-docker.sh
+
+    sudo usermod -aG docker ubuntu
+
+    newgrp docker
+
+# 6. Configure EC2 as self-hosted runner:
+    setting>actions>runner>new self hosted runner> choose os> then run command one by one
+
+# 7. Setup github secrets:
+
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+    - AWS_DEFAULT_REGION
+    - ECR_REPO
+    - PINECONE_API_KEY
+    - OPENAI_API_KEY
 
 ---
 
@@ -266,6 +344,7 @@ Contributions are welcome! Please follow these steps:
 5. Open a Pull Request
 
 You can contribute by improving:
+
 - Retrieval quality
 - Prompt engineering
 - UI/UX
