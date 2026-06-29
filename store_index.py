@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+# pyrefly: ignore [missing-import]
 from src.helper import load_pdf_file, filter_to_minimal_docs, text_split, download_hugging_face_embeddings
 from pinecone import Pinecone
 from pinecone import ServerlessSpec 
