@@ -112,16 +112,6 @@ Medical Documents (PDFs)
 
 ---
 
-## 🛠️ What You'll Build
-
-- A functional **Medical Chat Assistant** that answers domain-specific queries
-- A **document ingestion pipeline** with LangChain document loaders
-- A **semantic search system** backed by Pinecone vector database
-- An **LLM-powered response generator** using OpenAI
-- A clean **Flask web UI** for real-time chat interaction
-- A project ready for **cloud deployment** with GitHub Actions and AWS
-
----
 
 ## 🧰 Tech Stack
 
