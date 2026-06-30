@@ -56,9 +56,11 @@ jobs:
           docker stop medical-chatbot || true
           docker rm medical-chatbot || true
 
-      - name: Free port 8080 if still in use
+      - name: Prune Docker networks and restart Docker
         run: |
-          sudo fuser -k 8080/tcp || true
+          docker network prune -f || true
+          sudo systemctl restart docker
+          sleep 5
 
       - name: Pull latest image from ECR
         env:
