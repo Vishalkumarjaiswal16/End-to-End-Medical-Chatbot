@@ -14,7 +14,7 @@
 
 
 <p align="center">
-  <img src="Screenshot 2026-06-30 112009.png" alt="Medical Chatbot Demo" width="800"/>
+      <img src="images/Screenshot 2026-06-30 112009.png" alt="Medical Chatbot Demo" width="800"/>
 </p>
 
 ---
