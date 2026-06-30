@@ -295,7 +295,7 @@ http://localhost:5000
 
     #optinal
 
-    sudo apt-get update -y
+    sudo apt-get update 
 
     sudo apt-get upgrade
 
