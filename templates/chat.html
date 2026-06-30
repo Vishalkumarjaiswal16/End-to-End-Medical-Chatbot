@@ -1,81 +1,436 @@
-<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>Chatbot</title>
-		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css')}}"/>
-	</head>
-	
-	
-	<body>
-		<div class="container-fluid h-100">
-			<div class="row justify-content-center h-100">		
-				<div class="col-md-8 col-xl-6 chat">
-					<div class="card">
-						<div class="card-header msg_head">
-							<div class="d-flex bd-highlight">
-								<div class="img_cont">
-									<img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img">
-									<!-- <img src="https://www.prdistribution.com/spirit/uploads/pressreleases/2019/newsreleases/d83341deb75c4c4f6b113f27b1e42cd8-chatbot-florence-already-helps-thousands-of-patients-to-remember-their-medication.png" class="rounded-circle user_img"> -->
-									<span class="online_icon"></span>
-								</div>
-								<div class="user_info">
-									<span>Medical Chatbot</span>
-									<p>Ask me anything!</p>
-								</div>
-							</div>
-						</div>
-						<div id="messageFormeight" class="card-body msg_card_body">
-							
-							
-						</div>
-						<div class="card-footer">
-							<form id="messageArea" class="input-group">
-                                <input type="text" id="text" name="msg" placeholder="Type your message..." autocomplete="off" class="form-control type_msg" required/>
-								<div class="input-group-append">
-									<button type="submit" id="send" class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></button>
-								</div>
-							</form>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-		<script>
-			$(document).ready(function() {
-				$("#messageArea").on("submit", function(event) {
-					const date = new Date();
-					const hour = date.getHours();
-					const minute = date.getMinutes();
-					const str_time = hour+":"+minute;
-					var rawText = $("#text").val();
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAI &ndash; Intelligent Medical Assistant</title>
+    <meta name="description" content="AI-powered medical assistant for instant health guidance powered by GPT-4o and vector search.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 
-					var userHtml = '<div class="d-flex justify-content-end mb-4"><div class="msg_cotainer_send">' + rawText + '<span class="msg_time_send">'+ str_time + '</span></div><div class="img_cont_msg"><img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="rounded-circle user_img_msg"></div></div>';
-					
-					$("#text").val("");
-					$("#messageFormeight").append(userHtml);
+    <!-- Neural Background -->
+    <canvas id="bg-canvas"></canvas>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
-					$.ajax({
-						data: {
-							msg: rawText,	
-						},
-						type: "POST",
-						url: "/get",
-					}).done(function(data) {
-						var botHtml = '<div class="d-flex justify-content-start mb-4"><div class="img_cont_msg"><img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img_msg"></div><div class="msg_cotainer">' + data + '<span class="msg_time">' + str_time + '</span></div></div>';
-						$("#messageFormeight").append($.parseHTML(botHtml));
-					});
-					event.preventDefault();
-				});
-			});
-		</script>
-        
-    </body>
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="toast-text">Copied!</span>
+    </div>
+
+    <!-- Scroll-to-bottom -->
+    <button class="scroll-btn" id="scroll-btn" aria-label="Scroll to bottom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+
+    <div class="app-shell">
+
+        <!-- ── Header ── -->
+        <header class="chat-header">
+            <div class="header-brand">
+                <div class="bot-avatar">
+                    <div class="avatar-ring ring-outer"></div>
+                    <div class="avatar-ring ring-inner"></div>
+                    <div class="avatar-core">
+                        <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+                            <path d="M14 4C14 4 7 10 7 15.5C7 19.6 10.1 23 14 23C17.9 23 21 19.6 21 15.5C21 10 14 4 14 4Z" stroke="url(#av_g)" stroke-width="1.5" fill="none"/>
+                            <path d="M10 14H18" stroke="url(#av_g)" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M14 10.5V17.5" stroke="url(#av_g)" stroke-width="2" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="av_g" x1="7" y1="4" x2="21" y2="23" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#00d4ff"/>
+                                    <stop offset="100%" stop-color="#a855f7"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <span class="online-dot"></span>
+                </div>
+                <div class="brand-info">
+                    <span class="brand-name">MedAI</span>
+                    <span class="brand-status">
+                        <span class="status-pulse"></span>
+                        Active &middot; GPT-4o Powered
+                    </span>
+                </div>
+            </div>
+
+            <!-- ECG Heartbeat Line -->
+            <div class="ecg-wrap" aria-hidden="true">
+                <svg class="ecg-svg" viewBox="0 0 300 44" preserveAspectRatio="xMidYMid meet" fill="none">
+                    <path class="ecg-path-bg" d="M0,22 L38,22 L44,16 L50,28 L56,22 L72,22 L77,4 L81,40 L85,4 L90,22 L130,22 L135,16 L141,28 L147,22 L190,22 L195,4 L199,40 L203,4 L208,22 L260,22 L265,16 L271,28 L277,22 L300,22"/>
+                    <path class="ecg-path" d="M0,22 L38,22 L44,16 L50,28 L56,22 L72,22 L77,4 L81,40 L85,4 L90,22 L130,22 L135,16 L141,28 L147,22 L190,22 L195,4 L199,40 L203,4 L208,22 L260,22 L265,16 L271,28 L277,22 L300,22"/>
+                    <defs>
+                        <linearGradient id="ecg_g" x1="0" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%"   stop-color="#00d4ff" stop-opacity="0"/>
+                            <stop offset="35%"  stop-color="#00d4ff"/>
+                            <stop offset="65%"  stop-color="#a855f7"/>
+                            <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn" id="clear-btn" title="Clear conversation">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- ── Messages Area ── -->
+        <main class="messages-area" id="messages-area">
+            <div class="welcome-screen" id="welcome-screen">
+                <div class="welcome-halo"></div>
+                <div class="welcome-icon-wrap">
+                    <svg width="52" height="52" viewBox="0 0 56 56" fill="none">
+                        <circle cx="28" cy="28" r="26.5" stroke="url(#wi_g)" stroke-width="1.5"/>
+                        <path d="M18 28H38" stroke="url(#wi_g)" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M28 18V38" stroke="url(#wi_g)" stroke-width="2.5" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="wi_g" x1="2" y1="2" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#00d4ff"/>
+                                <stop offset="100%" stop-color="#a855f7"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="welcome-heading" id="welcome-heading">Hello, I'm <span class="gradient-text">MedAI</span></h1>
+                <p class="welcome-sub">Your intelligent medical companion. Ask me about symptoms, conditions, medications, or treatments &mdash; I'm here to help.</p>
+                <div class="quick-section">
+                    <p class="quick-label">Try asking</p>
+                    <div class="chips-grid">
+                        <button class="chip" style="--i:0" data-q="What are the common symptoms of diabetes?">💉 Diabetes symptoms</button>
+                        <button class="chip" style="--i:1" data-q="How can I treat a high fever at home?">🌡️ Treating fever</button>
+                        <button class="chip" style="--i:2" data-q="What is hypertension and how can I prevent it?">❤️ Hypertension</button>
+                        <button class="chip" style="--i:3" data-q="What are the side effects of ibuprofen?">💊 Ibuprofen effects</button>
+                        <button class="chip" style="--i:4" data-q="What causes migraines and how to relieve them?">🧠 Migraines</button>
+                        <button class="chip" style="--i:5" data-q="How does the immune system work?">🛡️ Immune system</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ── Input Area ── -->
+        <footer class="input-area">
+            <form id="chat-form" class="input-form">
+                <div class="input-shell" id="input-shell">
+                    <span class="input-prefix-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 8v4M12 16h.01"/>
+                        </svg>
+                    </span>
+                    <input type="text" id="user-input" name="msg" placeholder="Ask a medical question&hellip;" autocomplete="off" spellcheck="true"/>
+                    <div class="wave-bars" id="wave-bars" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <button type="submit" id="send-btn" class="send-btn" disabled aria-label="Send message">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+            <p class="disclaimer">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                For informational purposes only. Always consult a licensed healthcare professional.
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script>
+    // ══════════════════════════════════════════════
+    //  Neural Network Canvas
+    // ══════════════════════════════════════════════
+    (function(){
+        const cv = document.getElementById('bg-canvas');
+        const cx = cv.getContext('2d');
+        const N=70, D=140;
+        let W,H,pts=[];
+        const C=[[0,212,255],[168,85,247],[16,185,129]];
+        function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+        window.addEventListener('resize',rsz);rsz();
+        class P{
+            constructor(){this.r2(true);}
+            r2(init){
+                this.x=init?Math.random()*W:(Math.random()>.5?-5:W+5);
+                this.y=Math.random()*H;
+                this.vx=(Math.random()-.5)*.38;this.vy=(Math.random()-.5)*.38;
+                this.r=Math.random()*1.7+.7;
+                this.c=C[Math.floor(Math.random()*C.length)];
+                this.a=Math.random()*.45+.15;
+            }
+            upd(){
+                this.x+=this.vx;this.y+=this.vy;
+                if(this.x<-12||this.x>W+12||this.y<-12||this.y>H+12)this.r2(false);
+            }
+            drw(){
+                cx.beginPath();cx.arc(this.x,this.y,this.r,0,Math.PI*2);
+                cx.fillStyle=`rgba(${this.c[0]},${this.c[1]},${this.c[2]},${this.a})`;cx.fill();
+            }
+        }
+        for(let i=0;i<N;i++)pts.push(new P());
+        function loop(){
+            cx.clearRect(0,0,W,H);
+            pts.forEach(p=>{p.upd();p.drw();});
+            for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+                const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+                if(d<D){
+                    cx.beginPath();cx.moveTo(pts[i].x,pts[i].y);cx.lineTo(pts[j].x,pts[j].y);
+                    cx.strokeStyle=`rgba(0,212,255,${(1-d/D)*.11})`;cx.lineWidth=.5;cx.stroke();
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+        loop();
+    })();
+
+    // ══════════════════════════════════════════════
+    //  Cursor Sparkle Trail
+    // ══════════════════════════════════════════════
+    (function(){
+        const colors=['#00d4ff','#a855f7','#10b981','#ffffff','#fbbf24'];
+        let last=0;
+        document.addEventListener('mousemove',function(e){
+            const now=Date.now();
+            if(now-last<50)return;
+            last=now;
+            const s=document.createElement('span');
+            s.className='cur-spark';
+            s.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;background:${colors[Math.floor(Math.random()*colors.length)]};`;
+            document.body.appendChild(s);
+            setTimeout(()=>s.remove(),700);
+        });
+    })();
+
+    // ══════════════════════════════════════════════
+    //  Send Particle Burst
+    // ══════════════════════════════════════════════
+    function burstParticles(ox,oy){
+        const colors=['#00d4ff','#a855f7','#10b981','#ffffff','#fbbf24'];
+        for(let i=0;i<18;i++){
+            const p=document.createElement('span');
+            p.className='send-spark';
+            const angle=(i/18)*360+(Math.random()*20-10);
+            const dist=40+Math.random()*50;
+            const dx=Math.cos(angle*Math.PI/180)*dist;
+            const dy=Math.sin(angle*Math.PI/180)*dist;
+            const size=3+Math.random()*5;
+            p.style.cssText=`left:${ox}px;top:${oy}px;width:${size}px;height:${size}px;background:${colors[i%colors.length]};--dx:${dx}px;--dy:${dy}px;`;
+            document.body.appendChild(p);
+            setTimeout(()=>p.remove(),1000);
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    //  Time-based Greeting
+    // ══════════════════════════════════════════════
+    (function(){
+        const h=new Date().getHours();
+        const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+        const el=document.getElementById('welcome-heading');
+        if(el)el.innerHTML=`${g}, I'm <span class="gradient-text">MedAI</span>`;
+    })();
+
+    // ══════════════════════════════════════════════
+    //  Chat Logic
+    // ══════════════════════════════════════════════
+    $(function(){
+        const $form  =$('#chat-form');
+        const $inp   =$('#user-input');
+        const $btn   =$('#send-btn');
+        const $msgs  =$('#messages-area');
+        const $wel   =$('#welcome-screen');
+        const $clr   =$('#clear-btn');
+        const $shell =$('#input-shell');
+        const $scrl  =$('#scroll-btn');
+        const $bars  =$('#wave-bars');
+        let firstMsg=true, ctr=0;
+
+        // ── Utilities ─────────────────────────────
+        function time(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+        function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+        function scrollBot(){$msgs[0].scrollTop=$msgs[0].scrollHeight;}
+        function anim($el){requestAnimationFrame(()=>$el.addClass('visible'));}
+
+        // ── Toast ─────────────────────────────────
+        function toast(msg){
+            $('#toast-text').text(msg);
+            $('#toast').addClass('show');
+            setTimeout(()=>$('#toast').removeClass('show'),2200);
+        }
+
+        // ── Scroll Button ─────────────────────────
+        $msgs.on('scroll',function(){
+            const d=$msgs[0].scrollHeight-$msgs.scrollTop()-$msgs.height();
+            $scrl.toggleClass('visible',d>120);
+        });
+        $scrl.on('click',scrollBot);
+
+        // ── Welcome hide ──────────────────────────
+        function hideWelcome(){
+            if(!firstMsg)return;
+            $wel.addClass('exiting');
+            setTimeout(()=>$wel.hide(),500);
+            firstMsg=false;
+        }
+
+        // ── Typewriter Effect ─────────────────────
+        function typewrite(el,text){
+            return new Promise(resolve=>{
+                let i=0;
+                const speed=Math.max(6,Math.min(22,1200/Math.max(text.length,1)));
+                const tick=setInterval(()=>{
+                    i++;
+                    el.innerHTML=esc(text.slice(0,i)).replace(/\n/g,'<br>')+'<span class="tw-cursor"></span>';
+                    scrollBot();
+                    if(i>=text.length){
+                        clearInterval(tick);
+                        el.innerHTML=esc(text).replace(/\n/g,'<br>');
+                        resolve();
+                    }
+                },speed);
+            });
+        }
+
+        // ── Build copy button ─────────────────────
+        function copyBtn(rawText){
+            return `<button class="bubble-copy" data-raw="${esc(rawText)}" title="Copy message" aria-label="Copy">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                    </button>`;
+        }
+
+        // ── User Message ──────────────────────────
+        function userMsg(txt){
+            hideWelcome();
+            const $el=$(`
+                <div class="msg-row user-row">
+                    <div class="bubble user-bubble">
+                        <div class="bubble-text">${esc(txt)}</div>
+                        <div class="bubble-meta">
+                            ${copyBtn(txt)}
+                            <span class="bubble-time">${time()}</span>
+                        </div>
+                    </div>
+                </div>`);
+            $msgs.append($el);scrollBot();anim($el);
+        }
+
+        // ── Bot Message ───────────────────────────
+        function botMsg(txt){
+            removeTyping();
+            const uid='g'+(++ctr);
+            const $el=$(`
+                <div class="msg-row bot-row">
+                    <div class="bot-pip">
+                        <svg width="14" height="14" viewBox="0 0 28 28" fill="none">
+                            <path d="M10 14H18" stroke="url(#${uid})" stroke-width="2.2" stroke-linecap="round"/>
+                            <path d="M14 10V18" stroke="url(#${uid})" stroke-width="2.2" stroke-linecap="round"/>
+                            <defs><linearGradient id="${uid}" x1="7" y1="7" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#a855f7"/>
+                            </linearGradient></defs>
+                        </svg>
+                    </div>
+                    <div class="bubble bot-bubble">
+                        <div class="bubble-text"></div>
+                        <div class="bubble-meta">
+                            ${copyBtn(txt)}
+                            <span class="bubble-time">${time()}</span>
+                        </div>
+                    </div>
+                </div>`);
+            $msgs.append($el);scrollBot();anim($el);
+            typewrite($el.find('.bubble-text')[0],txt);
+        }
+
+        // ── Typing Indicator ──────────────────────
+        function showTyping(){
+            const uid='gt'+(++ctr);
+            const $el=$(`
+                <div class="msg-row bot-row" id="typing-row">
+                    <div class="bot-pip">
+                        <svg width="14" height="14" viewBox="0 0 28 28" fill="none">
+                            <path d="M10 14H18" stroke="url(#${uid})" stroke-width="2.2" stroke-linecap="round"/>
+                            <path d="M14 10V18" stroke="url(#${uid})" stroke-width="2.2" stroke-linecap="round"/>
+                            <defs><linearGradient id="${uid}" x1="7" y1="7" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#a855f7"/>
+                            </linearGradient></defs>
+                        </svg>
+                    </div>
+                    <div class="typing-bubble"><span></span><span></span><span></span></div>
+                </div>`);
+            $msgs.append($el);scrollBot();anim($el);
+        }
+        function removeTyping(){$('#typing-row').remove();}
+
+        // ── Input events ──────────────────────────
+        $inp.on('input',function(){
+            const has=$(this).val().trim()!=='';
+            $btn.prop('disabled',!has);
+            $bars.toggleClass('active',has);
+        });
+        $inp.on('focus',()=>$shell.addClass('focused'));
+        $inp.on('blur',()=>$shell.removeClass('focused'));
+        $inp.on('keydown',function(e){if(e.key==='Escape')$inp.val('').trigger('input');});
+
+        // ── Copy button ───────────────────────────
+        $(document).on('click','.bubble-copy',function(){
+            const raw=$(this).data('raw');
+            if(navigator.clipboard){
+                navigator.clipboard.writeText(raw).then(()=>toast('Copied!')).catch(()=>fallbackCopy(raw));
+            } else { fallbackCopy(raw); }
+        });
+        function fallbackCopy(text){
+            const ta=document.createElement('textarea');
+            ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+            document.body.appendChild(ta);ta.select();
+            try{document.execCommand('copy');toast('Copied!');}catch(e){}
+            document.body.removeChild(ta);
+        }
+
+        // ── Quick Chips ───────────────────────────
+        $(document).on('click','.chip',function(){
+            $inp.val($(this).data('q')).trigger('input');
+            $form.trigger('submit');
+        });
+
+        // ── Clear ─────────────────────────────────
+        $clr.on('click',function(){
+            $msgs.find('.msg-row').remove();
+            firstMsg=true;
+            $wel.removeClass('exiting').show();
+        });
+
+        // ── Submit ────────────────────────────────
+        $form.on('submit',function(e){
+            e.preventDefault();
+            const txt=$inp.val().trim();
+            if(!txt)return;
+            const r=document.getElementById('send-btn').getBoundingClientRect();
+            burstParticles(r.left+r.width/2,r.top+r.height/2);
+            $inp.val('');$btn.prop('disabled',true);$bars.removeClass('active');
+            userMsg(txt);showTyping();
+            $.ajax({type:'POST',url:'/get',data:{msg:txt}})
+                .done(d=>botMsg(d))
+                .fail(()=>botMsg("I'm sorry, something went wrong. Please try again."));
+        });
+    });
+    </script>
+</body>
 </html>
