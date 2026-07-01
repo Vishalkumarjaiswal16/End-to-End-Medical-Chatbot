@@ -58,7 +58,7 @@ jobs:
 
       - name: Prune Docker networks and restart Docker
         run: |
-          docker network prune -f || true
+          docker network prune -f || true 
           
       - name: Pull latest image from ECR
         env:
