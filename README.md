@@ -305,6 +305,10 @@ http://localhost:5000
 
     sudo sh get-docker.sh
 
+    sudo systemctl start docker
+    
+    sudo systemctl enable docker
+
     sudo usermod -aG docker ubuntu
 
     newgrp docker
